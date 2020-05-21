@@ -10,9 +10,9 @@
     <div class="control-panel">
       <button class="btn btn-primary" @click="save">Save</button>
       <button class="btn" @click="quite">Quite</button>
-      <button class="btn btn-danger" @click="removeNote">Remove</button>
-      <button class="btn" @click="undo">Undo</button>
-      <button class="btn" @click="returnUndo">Return undo</button>
+      <button class="btn btn-danger" @click="removeNote" :disabled="newNote">Remove</button>
+      <button class="btn" @click="undo" :disabled="!canUndo">Undo</button>
+      <button class="btn" @click="returnUndo" :disabled="!canReturnUndo">Return undo</button>
     </div>
     <button class="btn add-todo" @click="addTodo">Add todo</button>
     <div>
@@ -53,6 +53,17 @@
       note() {
         return this.noteHistory[this.historyIndex]
       },
+      newNote() {
+        return ( this.id < 0 )
+      },
+	    canUndo() {
+		    return this.historyIndex > 0
+	    },
+	    canReturnUndo() {
+		    const length = this.noteHistory.length
+		    const index = this.historyIndex
+		    return length - 1 > index
+	    },
       ...mapGetters('data', {
         noteList: 'noteList'
       })
@@ -89,19 +100,16 @@
         this.refreshHistory(changedNote)
       },
       undo() {
-        const index = this.historyIndex
-        if (index > 0) {
-          const undoIndex = index - 1
+        if ( this.canUndo ) {
+          const undoIndex = this.historyIndex - 1
           this.historyIndex = undoIndex
           const undoNote = this.noteHistory[undoIndex]
           this.tempHistory.push(undoNote)
         }
       },
       returnUndo() {
-        const length = this.noteHistory.length
-        const index = this.historyIndex
-        if ( length - 1 > index ) {
-          const returnUndoIndex = this.historyIndex = index + 1
+        if ( this.canReturnUndo ) {
+          const returnUndoIndex = this.historyIndex +=  1
           const returnUndoNote = this.noteHistory[returnUndoIndex]
           this.tempHistory.push(returnUndoNote)
         }
@@ -192,6 +200,9 @@
     &-primary {
       background-color: #3389b9;
     }
+  }
+  .btn[disabled] {
+    cursor: not-allowed;
   }
   .title {
     border: none;
